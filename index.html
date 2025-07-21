@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BikeTime Canvas Showcase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #fff;
+      font-family: sans-serif;
+      cursor: none;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    header {
+      position: absolute;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+
+.cursor {
+    z-index: 9999;
+    pointer-events: none;
+    background-color: #fff;
+    border: 2.5px solid #e40767;
+    border-radius: 100%;
+    width: 9px;
+    height: 9px;
+    position: absolute
+}
+
+    .nav-left,
+    .nav-right {
+      display: flex;
+      gap: 1.5rem;
+      font-weight: bold;
+    }
+
+    .center-logo img {
+      height: 50px;
+    }
+
+    .nav-btn {
+      position: absolute;
+      z-index: 10;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 9999px;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      cursor: pointer;
+    }
+
+    .nav-btn-left {
+      left: 2rem;
+    }
+
+    .nav-btn-right {
+      right: 2rem;
+    }
+
+    video.land-video {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      visibility: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="nav-left">
+      <span>FIETSEN</span>
+      <span>ONDERDELEN</span>
+    </div>
+    <div class="center-logo">
+      <img src="./assets/logo.png" alt="BikeTime Logo" />
+    </div>
+    <div class="nav-right">
+      <span>OVER</span>
+      <span>CONTACT</span>
+    </div>
+  </header>
+
+  <div class="cursor" id="cursor"></div>
+
+  <div class="">
+    <div class="nav-btn nav-btn-left" onclick="switchBike(-1)">⟵</div>
+    <div class="nav-btn nav-btn-right" onclick="switchBike(1)">⟶</div>
+  </div>
+  <canvas id="scene"></canvas>
+
+  <!-- Land videos -->
+  <video id="land0" class="land-video" width="100%" height="100%" autoplay loop muted playsinline>
+    <source src="https://staging.face44.com/assets/bike-time/Mountain%20Ped%20TT%20Alpha/Render-hevc-safari.mp4"
+      type='video/mp4; codecs="hvc1"'>
+    <source src="https://staging.face44.com/assets/bike-time/Mountain%20Ped%20TT%20Alpha/Render-vp9-chrome.webm"
+      type="video/webm">
+  </video>
+  <video id="land1" class="land-video" width="100%" height="100%" autoplay loop muted playsinline>
+    <source src="https://staging.face44.com/assets/bike-time/Road%20Ped%20TT%20Alpha/Render-hevc-safari.mp4"
+      type='video/mp4; codecs="hvc1"'>
+    <source src="https://staging.face44.com/assets/bike-time/Road%20Ped%20TT%20Alpha/Render-vp9-chrome.webm"
+      type="video/webm">
+  </video>
+  <video id="land2" class="land-video" width="100%" height="100%" autoplay loop muted playsinline>
+    <source src="https://staging.face44.com/assets/bike-time/Gravel%20Ped%20TT%20Alpha/Render-hevc-safari.mp4"
+      type='video/mp4; codecs="hvc1"'>
+    <source src="https://staging.face44.com/assets/bike-time/Gravel%20Ped%20TT%20Alpha/Render-vp9-chrome.webm"
+      type="video/webm">
+  </video>
+  <video id="land3" class="land-video" width="100%" height="100%" autoplay loop muted playsinline>
+    <source src="https://staging.face44.com/assets/bike-time/Electric%20Ped%20TT%20Alpha/Render-hevc-safari.mp4"
+      type='video/mp4; codecs="hvc1"'>
+    <source src="https://staging.face44.com/assets/bike-time/Electric%20Ped%20TT%20Alpha/Render-vp9-chrome.webm"
+      type="video/webm">
+  </video>
+
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    window.addEventListener("resize", () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const mouse = { x: width / 2, y: height / 2 };
+    window.addEventListener("mousemove", e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    const bikes = [
+      { bike: "./assets/bike1.webp", land: document.getElementById("land0"), rocks: ["./assets/rock1.webp", "./assets/rock2.webp"], name: "Gravel Bikes" },
+      { bike: "./assets/bike2.webp", land: document.getElementById("land1"), rocks: ["./assets/rock2.webp", "./assets/rock2.webp"], name: "Road Bikes" },
+      { bike: "./assets/bike3.webp", land: document.getElementById("land2"), rocks: ["./assets/rock3.webp", "./assets/rock3.webp"], name: "City Bikes" },
+      { bike: "./assets/bike4.webp", land: document.getElementById("land3"), rocks: ["./assets/rock4.webp", "./assets/rock4.webp"], name: "Race Bikes" },
+    ];
+
+    const images = {};
+    let currentBike = 0;
+    let floatOffset = 0;
+    let rotation = 0;
+    let animating = false;
+    let animationProgress = 0;
+
+    const rockPositions = [
+      { x: width * 0.25, y: height * 0.3 },
+      { x: width * 0.75, y: height * 0.35 }
+    ];
+
+    function drawRocks() {
+      const time = Date.now();
+      bikes[currentBike].rocks.forEach((src, i) => {
+        const img = new Image();
+        img.src = src;
+        const base = rockPositions[i];
+        const float = Math.sin(time / 3000 + i) * 2;
+        const angle = time / 4000 + i;
+
+        ctx.save();
+        ctx.translate(base.x, base.y + float);
+        ctx.rotate(angle);
+        ctx.drawImage(img, -30, -30, 60, 60);
+        ctx.restore();
+      });
+    }
+
+    function drawLandVideo() {
+      const video = bikes[currentBike].land;
+      if (video.readyState >= 2) {
+        const w = 600;
+        const h = 200;
+        ctx.save();
+        ctx.translate(width / 2, height / 2 + 200);
+        // ctx.rotate(rotation);
+        ctx.drawImage(video, -w / 2, -h / 2, w, h);
+        ctx.restore();
+      }
+    }
+
+    function drawGradientText() {
+      ctx.save();
+      const gradient = ctx.createLinearGradient(mouse.x - 200, 0, mouse.x + 200, 0);
+      gradient.addColorStop(0, '#f43f5e');
+      gradient.addColorStop(1, '#facc15');
+      ctx.fillStyle = gradient;
+      ctx.font = 'bold 100px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('RIDE FOR YOUR PASSION', width / 2, 160);
+      ctx.restore();
+    }
+
+    function drawBike() {
+      const bikeImg = new Image();
+      bikeImg.src = bikes[currentBike].bike;
+      const float = Math.sin(floatOffset) * 10;
+      const shiftX = (mouse.x - width / 2) * 0.01;
+      const shiftY = (mouse.y - height / 2) * 0.01;
+      ctx.drawImage(bikeImg, width / 2 - 250 + shiftX, height / 2 - 200 + shiftY + float, 500, 300);
+    }
+
+    function drawLabel() {
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.roundRect(width / 2 - 60, height / 2 + 70, 120, 30, 15);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(bikes[currentBike].name, width / 2, height / 2 + 85);
+    }
+
+    function drawCursor() {
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(mouse.x, mouse.y);
+      ctx.lineTo(mouse.x - 20, mouse.y - 30);
+      ctx.strokeStyle = '#e11d48';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function switchBike(dir) {
+      if (animating) return;
+      animating = true;
+      const next = (currentBike + dir + bikes.length) % bikes.length;
+      const start = Date.now();
+      const duration = 600;
+
+      function animateTransition() {
+        const progress = (Date.now() - start) / duration;
+        if (progress >= 1) {
+          currentBike = next;
+          animating = false;
+        } else {
+          requestAnimationFrame(animateTransition);
+        }
+      }
+
+      animateTransition();
+    }
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') switchBike(1);
+      else if (e.key === 'ArrowLeft') switchBike(-1);
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      floatOffset += 0.04;
+      rotation += 0.01;
+
+      // Draw calls
+      drawRocks();
+      drawLandVideo();
+      drawGradientText();
+      drawBike();
+      drawLabel();
+      drawCursor();
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+
+    const cursor = document.getElementById("cursor");
+    window.addEventListener("mousemove", e => {
+      cursor.style.left = e.clientX + "px";
+      cursor.style.top = e.clientY + "px";
+    });
+  </script>
+</body>
+
+</html>
