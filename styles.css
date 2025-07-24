@@ -1,138 +1,140 @@
- body.no-scroll {
-   overflow: hidden;
- }
-
-
- .cursor-wrapper {
-   z-index: 9999;
-   pointer-events: none;
-   mix-blend-mode: normal;
-   justify-content: center;
-   align-items: center;
-   display: flex;
-   position: fixed;
-   inset: 0%
- }
-
- .cursor {
-   z-index: 9999;
-   pointer-events: none;
-   background-color: #fff;
-   border: 2.5px solid #e40767;
-   border-radius: 100%;
-   width: 9px;
-   height: 9px;
-   position: absolute;
-
-   transform: translate(-50%, -50%);
-   transition: transform 0.03s linear;
- }
-
-
-
-.cursor_none{
-  cursor: none !important;
+html,
+body {
+  cursor: none;
 }
 
-#hover-area{
-     cursor: pointer !important;
+.cursor-wrapper {
+  z-index: 9999;
+  pointer-events: none;
+  mix-blend-mode: normal;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: fixed;
+  inset: 0;
 }
 
- body {
-   margin: 0;
-   font-family: sans-serif;
+.cursor {
+  z-index: 9999;
+  pointer-events: none;
+  background-color: #fff;
+  border: 2.5px solid #e40767;
+  border-radius: 100%;
+  width: 9px;
+  height: 9px;
+  position: absolute;
 
- }
+}
 
- .preloader-wrapper {
-   position: fixed;
-   top: 0;
-   left: 0;
-   width: 100%;
-   height: 100%;
-   background: #000;
-   color: #fff;
-   z-index: 9999;
-   display: flex;
-   flex-direction: column;
-   justify-content: center;
-   align-items: center;
- }
+@keyframes float {
 
- .preloader-heading {
-   font-size: 7rem;
-   margin-bottom: 20px;
-   animation: fadeIn 1s ease-in-out;
-   font-weight: 900;
- }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-9deg);
+  }
 
- .preloader_images-wrapper {
-   display: flex;
-   gap: 10px;
-   overflow: hidden;
-   max-width: 90vw;
-   margin-bottom: 20px;
- }
+  50% {
+    transform: translateY(-10px) rotate(-9deg);
 
- .preloader_image {
-   width: 180px;
-   height: auto;
-   opacity: 0;
-   transform: scale(0.8);
-   animation: imagePop 1s ease forwards;
- }
+  }
+}
 
- .preloader_image:nth-child(1) {
-   animation-delay: 0.3s;
- }
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 
- .preloader_image:nth-child(2) {
-   animation-delay: 0.6s;
- }
+}
 
- .preloader_image:nth-child(3) {
-   animation-delay: 0.9s;
- }
 
- .preloader_image:nth-child(4) {
-   animation-delay: 1.2s;
- }
+@keyframes floatAndRotate {
 
- .preloader_line-wrapper {
-   width: 6%;
-   height: 10px;
-   overflow: hidden;
-   margin: auto;
-   background-color: #000;
- }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
 
- .preloader_line {
-   height: 100%;
-   background: red;
-   width: 0;
-   animation: lineGrow 2.5s ease-out forwards;
- }
+  50% {
+    transform: translateY(-30px) rotate(360deg);
 
- /* Animations */
- @keyframes imagePop {
-   to {
-     opacity: 1;
-     transform: scale(1);
-   }
- }
+  }
+}
 
- @keyframes lineGrow {
-   to {
-     width: 100%;
-   }
- }
+.animation-rotate-float {
+  animation: floatAndRotate 50s linear infinite;
+}
 
- @keyframes fadeIn {
-   from {
-     opacity: 0;
-   }
+.transform {
+  transform: translate(-50%, -50%);
+}
 
-   to {
-     opacity: 1;
-   }
- }
+.rock2 {
+  animation-delay: 500ms;
+}
+
+#land0,
+#land1,
+#land2,
+#land3 {
+  width: 80%;
+  height: 80%;
+}
+
+.perspective-3d {
+  perspective: 1200px;
+}
+
+
+.key {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.key::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  transition: transform 0.4s ease;
+  border-radius: 9999px;
+}
+
+
+.key-left::before {
+  right: 0;
+  background: linear-gradient(to left, #f95b17, #e40767);
+  transform: translateX(100%);
+}
+
+.key-left:hover::before {
+  transform: translateX(0%);
+}
+
+
+.key-right::before {
+  left: 0;
+  background: linear-gradient(to right, #f95b17, #e40767);
+  transform: translateX(-100%);
+}
+
+.key-right:hover::before {
+  transform: translateX(0%);
+}
+
+
+
+.link-hover {
+  display: inline-block;
+  background-image: linear-gradient(to right, #e40767 50%, #000 50%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: background-position 0.5s ease;
+}
+
+.link-hover:hover {
+  background-position: 0 0;
+}
+

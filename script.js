@@ -1,176 +1,277 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const hoverArea = document.getElementById("hover-area");
-  const hoverBg = document.getElementById("hover-bg");
-  const hoverEye = document.getElementById("hover-eye");
+const cursor = document.querySelector('.cursor');
+const canvas = document.getElementById('cursor-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  let targetX = 0, targetY = 0;
-  let circleX = 0, circleY = 0;
-  let eyeX = 0, eyeY = 0;
-  let isHovering = false;
-
-  hoverArea.addEventListener("mouseenter", () => {
-    hoverBg.style.opacity = "1";
-    hoverEye.style.opacity = "1";
-
-    hoverBg.style.transform = "translate(-50%, -50%) scale(1)";
-    hoverEye.style.transform = "translate(-50%, -50%)";
-
-    isHovering = true;
-  });
-
-  hoverArea.addEventListener("mouseleave", () => {
-    hoverBg.style.opacity = "0";
-    hoverEye.style.opacity = "0";
-
-    hoverBg.style.transform = "translate(-50%, -50%) scale(0)";
-    hoverEye.style.transform = "translate(-50%, -50%) scale(0)";
-
-    isHovering = false;
-  });
-
-  hoverArea.addEventListener("mousemove", (e) => {
-    const rect = hoverArea.getBoundingClientRect();
-    targetX = e.clientX - rect.left;
-    targetY = e.clientY - rect.top;
-  });
-
-  function animate() {
-    // ✨ Different interpolation speeds
-    circleX += (targetX - circleX) * 0.12; // slower
-    circleY += (targetY - circleY) * 0.12;
-
-    eyeX += (targetX - eyeX) * 0.35; // faster
-    eyeY += (targetY - eyeY) * 0.35;
-
-    if (isHovering) {
-      // Update circle (background)
-      hoverBg.style.left = `${circleX}px`;
-      hoverBg.style.top = `${circleY}px`;
-      hoverBg.style.transform = "translate(-50%, -50%)";
-
-      // Update eye (foreground)
-      hoverEye.style.left = `${eyeX}px`;
-      hoverEye.style.top = `${eyeY}px`;
-      hoverEye.style.transform = "translate(-50%, -50%)";
-    }
-
-    requestAnimationFrame(animate);
-  }
-
-  animate();
-
-  const images = document.querySelectorAll(".preloader_images-wrapper img");
-  const heading = document.querySelector(".preloader-heading");
-  let currentIndex = 0;
-  let count = 0;
-
-
-
-  // Counter animation: 1 to 100
-  const counterInterval = setInterval(() => {
-    count++;
-    heading.textContent = `${count}`;
-    if (count >= 100) clearInterval(counterInterval);
-  }, 20); // ~3 seconds total
-
-  // Image animation: rotate one into view
-  const animateImages = () => {
-
-
-    images.forEach((img, index) => {
-      if (index === currentIndex) {
-        img.style.zIndex = 999;
-        img.style.transform = "rotate(0deg)";
-        img.style.opacity = 1;
-      }
-    });
-
-    currentIndex = (currentIndex + 1) % images.length;
-  };
-
-  // Rotate images every 600ms
-  const imageInterval = setInterval(animateImages, 600);
-
-  // End preloader after 3.5 seconds
-  setTimeout(() => {
-    clearInterval(imageInterval);
-    document.getElementById("preloader").style.opacity = 0;
-    document.getElementById("preloader").style.transition = "opacity 1s ease";
-    setTimeout(() => {
-      document.getElementById("preloader").style.display = "none";
-      document.getElementById("main-content").style.display = "block";
-      document.body.classList.remove("no-scroll");
-    }, 1000);
-  }, 3500);
-
-
-
-  const cursor = document.getElementsByClassName('cursor')[0];
-  const canvas = document.getElementById('cursor-canvas');
-  const ctx = canvas.getContext('2d');
-  console.log(ctx);
-
-  // Set canvas size
+window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+});
 
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  });
+let mouse = { x: 0, y: 0 };
+const trail = [];
 
-  let mouseX = 0, mouseY = 0;
-  let tailX = window.innerWidth / 2;
-  let tailY = window.innerHeight / 2;
-  const trail = [];
 
-  // Track mouse position
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
+document.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  cursor.style.top = `${mouse.y}px`;
+  cursor.style.left = `${mouse.x}px`;
+});
 
-    // 👇 Lock cursor dot directly to mouse
-    cursor.style.left = `${mouseX}px`;
-    cursor.style.top = `${mouseY}px`;
-  });
 
-  function drawTrail() {
-    // Clear the previous frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+let prevMouse = { x: 0, y: 0 };
+let maxTrail = 8;
+let trimSpeed = 2;
 
-    // 👇 Interpolate tail toward actual mouse (increase 0.5 for faster follow)
-    tailX += (mouseX - tailX) * 0.5;
-    tailY += (mouseY - tailY) * 0.5;
+function drawTrail() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Add the new tail position to trail array
-    trail.push({ x: tailX, y: tailY });
-    if (trail.length > 15) trail.shift(); // keep trail short and smooth
+  const dx = mouse.x - prevMouse.x;
+  const dy = mouse.y - prevMouse.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Draw the trailing line
-    ctx.beginPath();
-    for (let i = 0; i < trail.length - 1; i++) {
-      const p1 = trail[i];
-      const p2 = trail[i + 1];
+  const isMoving = dist > 1;
 
-      ctx.fillStyle = '#e40767';
-      ctx.lineWidth = 6;
-      ctx.shadowColor = '#e40767';
-      ctx.shadowBlur = 10;
-      ctx.globalAlpha = 0.9;
-      ctx.fill
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
+  if (isMoving) {
+    trail.push({ x: mouse.x, y: mouse.y });
+    prevMouse = { x: mouse.x, y: mouse.y };
+
+
+    while (trail.length > maxTrail) {
+      trail.shift();
     }
-    ctx.stroke();
+  } else {
 
-    // Call again for next animation frame
-    requestAnimationFrame(drawTrail);
+    for (let i = 0; i < trimSpeed && trail.length > 0; i++) {
+      trail.shift();
+    }
   }
 
-  // Kick off the animation
-  drawTrail();
 
+  if (trail.length > 2) {
+    ctx.beginPath();
+    ctx.strokeStyle = '#e40767';
+    ctx.lineWidth = 8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    ctx.moveTo(trail[0].x, trail[0].y);
+    for (let i = 1; i < trail.length - 2; i++) {
+      const xc = (trail[i].x + trail[i + 1].x) / 2;
+      const yc = (trail[i].y + trail[i + 1].y) / 2;
+      ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+    }
+
+    const last = trail[trail.length - 1];
+    const secondLast = trail[trail.length - 2];
+    ctx.quadraticCurveTo(secondLast.x, secondLast.y, last.x, last.y);
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(drawTrail);
+}
+
+
+const hoverArea = document.getElementById("hover-area");
+const hoverBg = document.getElementById("hover-bg");
+const hoverEye = document.getElementById("hover-eye");
+
+let targetX = 0, targetY = 0;
+let currentX = 0, currentY = 0;
+let isHovering = false;
+
+hoverArea.addEventListener("mouseenter", () => {
+  hoverBg.style.opacity = "1";
+  hoverEye.style.opacity = "1";
+  hoverEye.style.transform = "scale(1)";
+  hoverBg.style.transform = "scale(1)";
+  isHovering = true;
+});
+
+hoverArea.addEventListener("mouseleave", () => {
+  hoverBg.style.opacity = "0";
+  hoverEye.style.opacity = "0";
+  hoverEye.style.transform = "scale(0)";
+  hoverBg.style.transform = "scale(0)";
+  isHovering = false;
+});
+
+hoverArea.addEventListener("mousemove", (e) => {
+  const rect = hoverArea.getBoundingClientRect();
+  targetX = e.clientX - rect.left;
+  targetY = e.clientY - rect.top;
+});
+
+function animateHover() {
+  currentX += (targetX - currentX) * 0.15;
+  currentY += (targetY - currentY) * 0.15;
+
+  if (isHovering) {
+    hoverBg.style.left = `${currentX}px`;
+    hoverBg.style.top = `${currentY}px`;
+    hoverBg.style.transform = "translate(-50%, -50%) scale(1)";
+
+    hoverEye.style.left = `${currentX}px`;
+    hoverEye.style.top = `${currentY}px`;
+    hoverEye.style.transform = "translate(-50%, -50%) scale(1.1)";
+  }
+
+  requestAnimationFrame(animateHover);
+}
+
+animateHover();
+drawTrail();
+
+
+
+const heading = document.getElementById('dynamic-heading');
+
+window.addEventListener('mousemove', (e) => {
+  const rect = heading.getBoundingClientRect();
+  const relativeX = e.clientX - rect.left;
+
+
+  const clampedX = Math.max(0, Math.min(relativeX, rect.width));
+
+
+  const bgX = (clampedX / rect.width) * 100;
+
+
+  heading.style.backgroundPosition = `${bgX}% 40%`;
 });
 
 
 
+
+const heroArr = document.getElementById("hover-area")
+
+
+heroArr.addEventListener('mouseenter', (event) => {
+
+  event.stopPropagation();
+})
+
+
+const Arrowkeys = document.getElementsByClassName('key')
+
+Array(Arrowkeys).forEach((element, index) => {
+  element[index].addEventListener('mouseover', (event) => {
+    event.stopPropagation();
+
+  })
+});
+
+
+
+const items = document.querySelectorAll('.carousel-item');
+const total = items.length;
+let current = 0;
+
+gsap.set(items, { autoAlpha: 0, x: 0, y: 0 });
+gsap.set(items[0], { autoAlpha: 1 });
+
+function slide(toLeft = true) {
+  const currentItem = items[current];
+  const next = (current + (toLeft ? 1 : -1) + total) % total;
+  const nextItem = items[next];
+
+
+  gsap.set(nextItem, {
+    autoAlpha: 1,
+    x: toLeft ? "100vw" : "-100vw",
+    y: "30vh",
+    zIndex: 2,
+    rotation: toLeft ? 10 : -10,
+  });
+
+  const tl = gsap.timeline();
+
+
+  tl.to(currentItem, {
+    duration: 1.2,
+    x: toLeft ? "-100vw" : "100vw",
+    y: "30vh",
+    autoAlpha: 0,
+    ease: "expo.inOut",
+    rotation: toLeft ? -10 : 10,
+    zIndex: 1
+  }, 0);
+
+
+  tl.to(nextItem, {
+    duration: 1.2,
+    x: "0vw",
+    y: "0vh",
+    ease: "expo.inOut",
+    rotation: 0
+  }, 0);
+
+
+  const gradientNum = next + 1;
+  heading.style.backgroundImage = `url('./assets/grad${gradientNum}.png')`;
+
+  current = next;
+}
+
+
+
+document.querySelectorAll('.key').forEach((btn, index) => {
+  btn.addEventListener('click', () => {
+    slide(index === 0 ? false : true);
+    restartInterval();
+  });
+});
+
+let interval = setInterval(() => slide(true), 5000);
+
+function restartInterval() {
+  clearInterval(interval);
+  interval = setInterval(() => slide(true), 5000);
+}
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const counting = document.getElementById("counting");
+  const line = document.getElementById("line");
+  const images = document.querySelectorAll(".rider-img");
+  const preloader = document.getElementById("preloader");
+  const mainContent = document.getElementById("main-content");
+
+  let count = 0;
+  const max = 100;
+  const interval = 20;
+
+  const updatePreloader = () => {
+    if (count >= max) {
+      clearInterval(loaderInterval);
+
+
+      preloader.classList.add("opacity-0", "transition-opacity", "duration-1000");
+
+      setTimeout(() => {
+        preloader.style.display = "none";
+        mainContent.classList.remove("hidden");
+      }, 1000);
+
+      return;
+    }
+
+    count++;
+    line.style.width = `${count}%`;
+    counting.innerText = count;
+
+
+    const index = Math.floor((count / max) * images.length);
+    images.forEach((img, i) => {
+
+      img.style.zIndex = (i === index) ? "50" : "0";
+
+    });
+  };
+
+  const loaderInterval = setInterval(updatePreloader, interval);
+});
