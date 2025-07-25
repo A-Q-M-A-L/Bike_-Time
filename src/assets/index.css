@@ -1,6 +1,12 @@
+@import "tailwindcss";
+
+/* bg-[#f0e3d84f] text-white overflow-clip */
 html,
 body {
   cursor: none;
+  background-color: '#f0e3d84f';
+  color: white;
+  overflow: hidden;
 }
 
 .cursor-wrapper {
@@ -84,7 +90,7 @@ body {
 
 
 .key {
-  position: relative;
+  /* position: relative; */
   overflow: hidden;
   z-index: 1;
 }
@@ -129,6 +135,7 @@ body {
   background-image: linear-gradient(to right, #e40767 50%, #000 50%);
   background-size: 200% 100%;
   background-position: 100% 0;
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   transition: background-position 0.5s ease;
